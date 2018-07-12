@@ -1,0 +1,12 @@
+{
+  "name": "hubdoc",
+  "version": "1.0.0",
+  "description": "hubdoc skills assessment",
+  "main": "index.js",
+  "author": "Andy Tran <andy8tran@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "puppeteer": "^1.5.0"
+  }
+}
