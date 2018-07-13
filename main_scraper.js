@@ -7,10 +7,9 @@ const puppeteer = require('puppeteer');
   const page = await browser.newPage();
   await page.goto('https://datatables.net');
 
-  const dataOutputObject = await page.evaluate(() => {
-    // Helper function for converting from nodelist to ES array so we can map
-    const toArr = nodeList => Array.prototype.slice.call(nodeList);
+  await page.addScriptTag({ path: './main_scraper_utils.js' });
 
+  const dataOutputObject = await page.evaluate(() => {
     // Grab the table rows from the webpage
     const rows = document.querySelectorAll('tr[role=row]');
     const rowsArr = toArr(rows);
@@ -19,27 +18,14 @@ const puppeteer = require('puppeteer');
     const headerRow = rowsArr[0].children;
     const headerLabels = toArr(headerRow).map(each => each.innerText);
 
-    // Apply transforms to the rest of the data to get each cell in
+    // Apply data transforms to the rest of the data to get each cell in
     // each row and zip the cell to the appropriate header
     const bodyRows = rowsArr.slice(1);
     const bodyRowInnertexts = bodyRows.map(toChildrenInnertext);
-    const bodyRowObjects = bodyRowInnertexts.map(toObjectWithHeadingsAsKey);
+    const bodyRowObjects = bodyRowInnertexts.map(zipEachWithHeadings);
 
-    function toChildrenInnertext(eachBodyRow) {
-      return toArr(eachBodyRow.children).map(toInnerText);
-    }
-
-    function toInnerText(eachChild) {
-      return eachChild.innerText;
-    }
-
-    function toObjectWithHeadingsAsKey(eachInnertextArr) {
-      return eachInnertextArr.reduce(zipWithHeadings, {});
-    }
-
-    function zipWithHeadings(acc, eachInnertext, index) {
-      acc[headerLabels[index]] = eachInnertext;
-      return acc;
+    function zipEachWithHeadings(each) {
+      return each.reduce(zipWith(headerLabels), {});
     }
 
     return bodyRowObjects;
